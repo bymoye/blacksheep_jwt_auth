@@ -1,33 +1,33 @@
 from typing import Optional
 
 from blacksheep.messages import Request
-from blacksheep.server import Application
 from blacksheep.server.authorization import Policy
 from guardpost.asynchronous.authentication import AuthenticationHandler, Identity
 from guardpost.authorization import AuthorizationContext
-from guardpost.common import AuthenticatedRequirement
 from guardpost.synchronous.authorization import Requirement
 from .jwt import JsonWebToken
-from .data import JWTPayload, Roles, Authenticated
+from .data import Roles
 
 
 class AuthHandler(AuthenticationHandler):
+
     def __init__(self, jwt: JsonWebToken):
         self.jwt = jwt
 
     async def authenticate(self, context: Request) -> Optional[Identity]:
-        if header_value := context.get_first_header(b'Authorization'):
+        if header_value := context.get_first_header(
+                b'Authorization') and header_value.startswith(b'Bearer '):
             try:
-                header_value = header_value.decode().replace('Bearer ', '')
-                info = self.jwt.validate_jwt_token(header_value)
+                token = header_value[7:].decode()
+                info = self.jwt.validate_jwt_token(token)
                 context.identity = Identity(info, "scheme")
-                # context.identity = info
             except:
                 context.identity = Identity(None)
         return context.identity
 
 
 class AdminRequirement(Requirement):
+
     def handle(self, context: AuthorizationContext):
         identity = context.identity
 
@@ -36,13 +36,21 @@ class AdminRequirement(Requirement):
 
 
 class AdminPolicy(Policy):
+
     def __init__(self):
         super().__init__(Roles.ADMIN, AdminRequirement())
 
 
-class Init:
-    def __init__(self, app: Application) -> None:
-        provider = app.services.build_provider()
-        app.use_authentication().add(AuthHandler(encryptor=provider.get(JsonWebToken)))
-        app.use_authorization().add(
-            Policy(Authenticated, AuthenticatedRequirement())).add(AdminPolicy())
+class SuperAdminRequirement(Requirement):
+
+    def handle(self, context: AuthorizationContext):
+        identity = context.identity
+
+        if identity and identity.has_claim_value('role', Roles.SUPERADMIN):
+            context.succeed(self)
+
+
+class SuperAdminPolicy(Policy):
+
+    def __init__(self):
+        super().__init__(Roles.SUPERADMIN, AdminRequirement())
