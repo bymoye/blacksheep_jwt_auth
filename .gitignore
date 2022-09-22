@@ -2,4 +2,4 @@ key
 config.yaml
 **/__pycache__
 */__pycache__
-service/*
+service
