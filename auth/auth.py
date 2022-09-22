@@ -7,45 +7,42 @@ from guardpost.asynchronous.authentication import AuthenticationHandler, Identit
 from guardpost.authorization import AuthorizationContext
 from guardpost.common import AuthenticatedRequirement
 from guardpost.synchronous.authorization import Requirement
-from .jwt import Encryptor
+from .jwt import JsonWebToken
+from .data import JWTPayload, Roles, Authenticated
+
 
 class AuthHandler(AuthenticationHandler):
-    def __init__(self,encryptor:Encryptor):
-        self.encryptor = encryptor
-    
+    def __init__(self, jwt: JsonWebToken):
+        self.jwt = jwt
+
     async def authenticate(self, context: Request) -> Optional[Identity]:
-        header_value = context.get_first_header(b'Authorization')
-        if header_value:
+        if header_value := context.get_first_header(b'Authorization'):
             try:
                 header_value = header_value.decode().replace('Bearer ', '')
-                info = self.encryptor.validate_jwt_token(header_value)
-                assert isinstance(info,dict)
-                assert 'ID' in info
-                if info['state'] != 0:
-                    raise Exception('Invalid state')
-                if info['role'] == 1:
-                    raise Exception('You are not admin')
-                if info['role'] == 2:
-                    raise Exception('You are not superadmin')
-                context.identity = Identity(info,"scheme")
+                info = self.jwt.validate_jwt_token(header_value)
+                context.identity = Identity(info, "scheme")
+                # context.identity = info
             except:
-                context.identity = None
+                context.identity = Identity(None)
         return context.identity
+
 
 class AdminRequirement(Requirement):
     def handle(self, context: AuthorizationContext):
         identity = context.identity
 
-        if identity is not None and identity.claims.get("role") == 1:
+        if identity and identity.has_claim_value('role', Roles.ADMIN):
             context.succeed(self)
+
 
 class AdminPolicy(Policy):
     def __init__(self):
-        super().__init__("admin", AdminRequirement())
+        super().__init__(Roles.ADMIN, AdminRequirement())
+
 
 class Init:
     def __init__(self, app: Application) -> None:
-        Authenticated = "authenticated"
-        provider =  app.services.build_provider()
-        app.use_authentication().add(AuthHandler(encryptor = provider.get(Encryptor)))
-        app.use_authorization().add(Policy(Authenticated, AuthenticatedRequirement())).add(AdminPolicy())
+        provider = app.services.build_provider()
+        app.use_authentication().add(AuthHandler(encryptor=provider.get(JsonWebToken)))
+        app.use_authorization().add(
+            Policy(Authenticated, AuthenticatedRequirement())).add(AdminPolicy())

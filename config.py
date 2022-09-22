@@ -21,7 +21,6 @@ class Gconfig:
                 assert config and config.get('password') and config.get('salt'), 'config 文件不完整'
                 self.password = config['password']
                 self.salt = config['salt']
-    
         except FileNotFoundError as e:
             print(f'Error: {e}')
             print('创建config.yaml')

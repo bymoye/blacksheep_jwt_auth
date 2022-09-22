@@ -14,5 +14,6 @@ DB = PostgresEngine(
 )
 
 APP_REGISTRY = AppRegistry(
-    apps=["home.piccolo_app"]
+    apps=["home.piccolo_app", "baseuser.piccolo_app",
+          "piccolo.apps.user.piccolo_app"]
 )
