@@ -15,9 +15,9 @@ class AuthHandler(AuthenticationHandler):
         self.jwt = jwt
 
     async def authenticate(self, context: Request) -> Optional[Identity]:
-        if header_value := context.get_first_header(
-                b'Authorization') and header_value.startswith(b'Bearer '):
+        if header_value := context.get_first_header(b'Authorization'):
             try:
+                assert header_value.startswith(b'Bearer ')
                 token = header_value[7:].decode()
                 info = self.jwt.validate_jwt_token(token)
                 context.identity = Identity(info, "scheme")
