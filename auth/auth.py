@@ -45,7 +45,7 @@ class SuperAdminRequirement(Requirement):
 
     def handle(self, context: AuthorizationContext):
         identity = context.identity
-
+        print("进入SuperAdminRequirement")
         if identity and identity.has_claim_value('role', Roles.SUPERADMIN):
             context.succeed(self)
 
@@ -53,4 +53,4 @@ class SuperAdminRequirement(Requirement):
 class SuperAdminPolicy(Policy):
 
     def __init__(self):
-        super().__init__(Roles.SUPERADMIN, AdminRequirement())
+        super().__init__(Roles.SUPERADMIN, SuperAdminRequirement())
