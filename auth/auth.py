@@ -45,7 +45,6 @@ class SuperAdminRequirement(Requirement):
 
     def handle(self, context: AuthorizationContext):
         identity = context.identity
-        print("进入SuperAdminRequirement")
         if identity and identity.has_claim_value('role', Roles.SUPERADMIN):
             context.succeed(self)
 

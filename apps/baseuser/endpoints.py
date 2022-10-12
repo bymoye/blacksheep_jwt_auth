@@ -60,17 +60,21 @@ class User(APIController):
         except Exception as e:
             return json({"status": False, "message": str(e)})
 
+    @get("/test")
+    async def _(self, jwt: JsonWebToken):
+        return text(jwt.hash_password("test"))
+
     @auth(Authenticated)
     @get("/verify_default")
-    async def verify_default(self, user: Optional[Identity]):
+    async def verify_default(self, user: Identity):
         return json({"status": True, "user": user.claims})
 
     @auth(Roles.ADMIN)
     @get("/verify_admin")
-    async def verify_admin(self, user: Optional[Identity]):
+    async def verify_admin(self, user: Identity):
         return json({"status": True, "user": user.claims})
 
     @auth(Roles.SUPERADMIN)
     @get("/verify_superadmin")
-    async def verify_superadmin(self, user: Optional[Identity]):
+    async def verify_superadmin(self, user: Identity):
         return json({"status": True, "user": user.claims})

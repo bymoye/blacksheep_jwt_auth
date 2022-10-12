@@ -6,7 +6,6 @@ from openapidocs.v3 import Info
 from auth.auth import AdminPolicy, AuthHandler, SuperAdminPolicy
 from auth.data import Authenticated
 from auth.jwt import JsonWebToken
-from config import Gconfig
 
 import apps
 
@@ -46,7 +45,7 @@ async def close_database_connection_pool(application):
 
 app.on_start += open_database_connection_pool
 app.on_stop += close_database_connection_pool
-app.services.add_instance(JsonWebToken(Gconfig()))
+app.services.add_instance(JsonWebToken())
 provider = app.services.build_provider()
 app.use_authentication().add(AuthHandler(jwt=provider.get(JsonWebToken)))
 app.use_authorization().add(Policy(Authenticated,
