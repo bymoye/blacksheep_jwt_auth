@@ -4,3 +4,5 @@ jinja2
 piccolo[postgres]
 piccolo_admin
 blake3
+cryptography
+orjson

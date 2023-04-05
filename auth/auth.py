@@ -10,14 +10,13 @@ from .data import Roles
 
 
 class AuthHandler(AuthenticationHandler):
-
     def __init__(self, jwt: JsonWebToken):
         self.jwt = jwt
 
     async def authenticate(self, context: Request) -> Optional[Identity]:
-        if header_value := context.get_first_header(b'Authorization'):
+        if header_value := context.get_first_header(b"Authorization"):
             try:
-                assert header_value.startswith(b'Bearer ')
+                assert header_value.startswith(b"Bearer ")
                 token = header_value[7:].decode()
                 info = self.jwt.validate_jwt_token(token)
                 context.identity = Identity(info, "scheme")
@@ -27,29 +26,25 @@ class AuthHandler(AuthenticationHandler):
 
 
 class AdminRequirement(Requirement):
-
     def handle(self, context: AuthorizationContext):
         identity = context.identity
 
-        if identity and identity.has_claim_value('role', Roles.ADMIN):
+        if identity and identity.has_claim_value("is_admin", True):
             context.succeed(self)
 
 
 class AdminPolicy(Policy):
-
     def __init__(self):
         super().__init__(Roles.ADMIN, AdminRequirement())
 
 
 class SuperAdminRequirement(Requirement):
-
     def handle(self, context: AuthorizationContext):
         identity = context.identity
-        if identity and identity.has_claim_value('role', Roles.SUPERADMIN):
+        if identity and identity.has_claim_value("is_superuser", True):
             context.succeed(self)
 
 
 class SuperAdminPolicy(Policy):
-
     def __init__(self):
         super().__init__(Roles.SUPERADMIN, SuperAdminRequirement())

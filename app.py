@@ -14,16 +14,8 @@ from guardpost.common import AuthenticatedRequirement
 
 app = Application()
 
-# app.mount(
-#     "/admin/",
-#     create_admin(
-#         tables=APP_CONFIG.table_classes,
-#         # Required when running under HTTPS:
-#         # allowed_hosts=['my_site.com']
-#     ),
-# )
 
-docs = OpenAPIHandler(info=Info(title="Example API", version="0.0.1"))
+docs = OpenAPIHandler(info=Info(title="User API", version="0.0.1"))
 docs.bind_app(app)
 
 
@@ -32,7 +24,7 @@ async def open_database_connection_pool(application):
         engine = engine_finder()
         await engine.start_connection_pool()
     except Exception:
-        print("Unable to connect to the database")
+        print("无法连接到数据库, 请检查数据库连接是否正常")
 
 
 async def close_database_connection_pool(application):
@@ -40,7 +32,7 @@ async def close_database_connection_pool(application):
         engine = engine_finder()
         await engine.close_connection_pool()
     except Exception:
-        print("Unable to connect to the database")
+        print("关闭数据库连接失败, 请检查数据库连接是否正常")
 
 
 app.on_start += open_database_connection_pool

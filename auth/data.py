@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-import enum
 import time
 
 
@@ -18,9 +17,10 @@ class JWTPayload:
     id: int
     name: str
     email: str = field(default=None)
-    role: Roles = field(default=Roles.USER)
+    is_superuser: bool = field(default=False)
+    is_admin: bool = field(default=False)
     iat: int = field(default_factory=lambda: int(time.time()))
     exp: int = field(default_factory=lambda: int(time.time()) + 604800)
 
     def get(self, key):
-        return self.__dict__.get(key)
+        return getattr(self, key)
